@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记账本 - 记账录入</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">💰</div>
+        <span>记账本</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a class="nav-item" th:href="@{/records}">
+            <span class="nav-icon">📋</span> 首页
+        </a>
+        <a class="nav-item active" th:href="@{/entry}">
+            <span class="nav-icon">✏️</span> 记账
+        </a>
+        <a class="nav-item" th:href="@{/stats}">
+            <span class="nav-icon">📊</span> 统计
+        </a>
+        <a class="nav-item" th:href="@{/category}">
+            <span class="nav-icon">🏷️</span> 分类管理
+        </a>
+    </nav>
+    <div class="nav-bottom">
+        <a class="nav-item" th:href="@{/profile}">
+            <span class="nav-icon">👤</span> 个人中心
+        </a>
+        <a class="nav-item" href="#" onclick="confirmLogout()">
+            <span class="nav-icon">🚪</span> 退出登录
+        </a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <div class="page active">
+        <div class="page-title">
+            <span th:if="${record == null or record.id == null}">新增记录</span>
+            <span th:if="${record != null and record.id != null}">编辑记录</span>
+        </div>
+        <div class="form-card">
+            <div class="tab-bar">
+                <div class="tab-item active" onclick="switchTab('manual')">✏️ 手动记账</div>
+                <div class="tab-item" onclick="switchTab('import')">📤 批量导入</div>
+            </div>
+
+            <!-- 手动记账 Tab -->
+            <div id="manual-tab">
+                <form th:action="@{/records/save}" method="post">
+                    <input type="hidden" name="id" th:value="${record != null ? record.id : null}">
+                    <div class="form-group">
+                        <label>类型 <span class="required">*</span></label>
+                        <div class="radio-group">
+                            <label class="radio-btn" id="expenseBtn" onclick="setType('expense')">💸 支出</label>
+                            <label class="radio-btn" id="incomeBtn" onclick="setType('income')">💰 收入</label>
+                        </div>
+                        <input type="hidden" name="type" id="typeInput" th:value="${record != null ? record.type : 'expense'}">
+                    </div>
+                    <div class="form-group">
+                        <label>金额 <span class="required">*</span></label>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <input type="number" step="0.01" name="amount" class="form-control" th:value="${record != null ? record.amount : ''}" required placeholder="请输入金额">
+                            <span style="color:#666;white-space:nowrap">元</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>分类 <span class="required">*</span></label>
+                        <select name="category" class="form-control" required>
+                            <option value="">请选择</option>
+                            <option th:each="cat : ${categories}" th:value="${cat.name}" th:text="${cat.name}" th:selected="${record != null and record.category == cat.name}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>日期 <span class="required">*</span></label>
+                        <input type="date" name="date" class="form-control" th:value="${record != null ? record.date : #dates.format(#dates.createNow(), 'yyyy-MM-dd')}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>备注 <span style="color:#aaa;font-weight:400">（可选，最多50字）</span></label>
+                        <textarea name="note" class="form-control" rows="3" maxlength="50" th:text="${record != null ? record.note : ''}"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;height:44px;font-size:15px;margin-top:8px">确 定</button>
+                </form>
+            </div>
+
+            <!-- 批量导入 Tab -->
+            <div id="import-tab" style="display:none">
+                <p style="font-size:13px;color:#666;margin-bottom:16px">请上传微信/支付宝导出的账单文件（CSV格式）</p>
+                <form th:action="@{/records/import/upload}" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <div class="upload-area" onclick="document.getElementById('csv-input').click()">
+                            <div class="upload-icon">📂</div>
+                            <p>点击或拖拽上传</p>
+                            <small>支持文件：.csv，最大 10MB</small>
+                            <input type="file" id="csv-input" name="file" accept=".csv" style="display:none" onchange="this.form.submit()">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;height:44px;">上传并导入</button>
+                </form>
+                <div style="margin-top:24px; background:#f9fafb; border-radius:16px; padding:16px;">
+                    <h5>📄 CSV 格式要求</h5>
+                    <p>必须包含列：交易时间,交易类型,金额,收支分类,备注<br>示例：2026-04-15,支出,45.00,餐饮,午餐</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    function switchTab(tab) {
+        const manual = document.getElementById('manual-tab');
+        const importTab = document.getElementById('import-tab');
+        const tabs = document.querySelectorAll('.tab-item');
+        if (tab === 'manual') {
+            manual.style.display = 'block';
+            importTab.style.display = 'none';
+            tabs[0].classList.add('active');
+            tabs[1].classList.remove('active');
+        } else {
+            manual.style.display = 'none';
+            importTab.style.display = 'block';
+            tabs[0].classList.remove('active');
+            tabs[1].classList.add('active');
+        }
+    }
+    function setType(type) {
+        document.getElementById('typeInput').value = type;
+        const expenseBtn = document.getElementById('expenseBtn');
+        const incomeBtn = document.getElementById('incomeBtn');
+        if (type === 'expense') {
+            expenseBtn.classList.add('active-expense');
+            incomeBtn.classList.remove('active-income');
+        } else {
+            incomeBtn.classList.add('active-income');
+            expenseBtn.classList.remove('active-expense');
+        }
+    }
+    function confirmLogout() {
+        if(confirm('确定退出登录吗？')) {
+            window.location.href = '/logout';
+        }
+    }
+    // 页面加载时根据已有记录的类型初始化按钮样式
+    window.onload = function() {
+        var typeInput = document.getElementById('typeInput');
+        if (typeInput && typeInput.value) {
+            setType(typeInput.value);
+        } else {
+            setType('expense');
+        }
+    };
+</script>
+</body>
+</html>
