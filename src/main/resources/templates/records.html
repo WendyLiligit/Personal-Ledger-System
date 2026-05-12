@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记账本 - 收支记录</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+
+<!-- 侧边导航（与您提供的结构完全一致） -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">💰</div>
+        <span>记账本</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a class="nav-item active" th:href="@{/records}">
+            <span class="nav-icon">📋</span> 首页
+        </a>
+        <a class="nav-item" th:href="@{/entry}">
+            <span class="nav-icon">✏️</span> 记账
+        </a>
+        <a class="nav-item" th:href="@{/stats}">
+            <span class="nav-icon">📊</span> 统计
+        </a>
+        <a class="nav-item" th:href="@{/category}">
+            <span class="nav-icon">🏷️</span> 分类管理
+        </a>
+    </nav>
+    <div class="nav-bottom">
+        <a class="nav-item" th:href="@{/profile}">
+            <span class="nav-icon">👤</span> 个人中心
+        </a>
+        <a class="nav-item" href="#" onclick="confirmLogout()">
+            <span class="nav-icon">🚪</span> 退出登录
+        </a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <div class="page active">
+        <div class="page-title">收支记录</div>
+
+        <!-- 汇总卡片（动态数据） -->
+        <div class="summary-cards">
+            <div class="summary-card income">
+                <div class="label">本月收入</div>
+                <div class="amount" th:text="${#numbers.formatDecimal(summary.income, 1, 2)}">0.00</div>
+                <div class="trend">本月统计</div>
+            </div>
+            <div class="summary-card expense">
+                <div class="label">本月支出</div>
+                <div class="amount" th:text="${#numbers.formatDecimal(summary.expense, 1, 2)}">0.00</div>
+                <div class="trend">本月统计</div>
+            </div>
+            <div class="summary-card balance">
+                <div class="label">本月结余</div>
+                <div class="amount" th:text="${#numbers.formatDecimal(summary.balance, 1, 2)}">0.00</div>
+                <div class="trend">💡 收支健康</div>
+            </div>
+        </div>
+
+        <!-- 筛选栏 -->
+        <form th:action="@{/records}" method="get" class="filter-bar">
+            <label>日期</label>
+            <input type="date" name="startDate" th:value="${param.startDate}" class="filter-input">
+            <span style="color:#ccc">—</span>
+            <input type="date" name="endDate" th:value="${param.endDate}" class="filter-input">
+
+            <label>分类</label>
+            <select name="category" class="filter-select">
+                <option value="">全部分类</option>
+                <option th:each="cat : ${categories}" th:value="${cat.name}" th:text="${cat.name}" th:selected="${param.category == cat.name}"></option>
+            </select>
+
+            <label>类型</label>
+            <select name="type" class="filter-select">
+                <option value="">全部</option>
+                <option value="income" th:selected="${param.type == 'income'}">收入</option>
+                <option value="expense" th:selected="${param.type == 'expense'}">支出</option>
+            </select>
+
+            <label>金额</label>
+            <input type="number" name="minAmount" class="filter-input amount" placeholder="最小值" th:value="${param.minAmount}">
+            <span style="color:#ccc">—</span>
+            <input type="number" name="maxAmount" class="filter-input amount" placeholder="最大值" th:value="${param.maxAmount}">
+
+            <button type="submit" class="btn btn-primary">🔍 搜索</button>
+            <button type="reset" class="btn btn-default" onclick="window.location.href='/records'">↺ 重置</button>
+        </form>
+
+        <div class="table-card">
+            <div class="table-header" style="display:flex;justify-content:space-between;margin-bottom:16px">
+                <h3>记录列表</h3>
+                <a th:href="@{/entry}" class="btn btn-success">＋ 新增记录</a>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>日期</th><th>分类</th><th>描述</th><th>类型</th><th>金额</th><th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${records}">
+                    <td th:text="${r.date}"></td>
+                    <td th:text="${r.category}"></td>
+                    <td th:text="${r.note}"></td>
+                    <td th:text="${r.type == 'income' ? '收入' : '支出'}"></td>
+                    <td th:class="${r.type == 'income' ? 'text-success' : 'text-danger'}" th:text="'¥' + ${#numbers.formatDecimal(r.amount, 1, 2)}"></td>
+                    <td>
+                        <a th:href="@{/entry(id=${r.id})}" class="btn btn-sm btn-warning">编辑</a>
+                        <a th:href="@{/records/delete/{id}(id=${r.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除？')">删除</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(records)}">
+                    <td colspan="6" style="text-align:center">暂无数据</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <div class="pagination-info">第 <span th:text="${page.number + 1}"/> / <span th:text="${page.totalPages}"/> 页</div>
+                <div class="pagination-btns">
+                    <a th:href="@{/records(page=${page.number}, size=${page.size}, startDate=${param.startDate}, endDate=${param.endDate}, category=${param.category}, type=${param.type}, minAmount=${param.minAmount}, maxAmount=${param.maxAmount})}" th:unless="${page.first}" class="btn btn-default">上一页</a>
+                    <a th:href="@{/records(page=${page.number+2}, size=${page.size}, startDate=${param.startDate}, endDate=${param.endDate}, category=${param.category}, type=${param.type}, minAmount=${param.minAmount}, maxAmount=${param.maxAmount})}" th:unless="${page.last}" class="btn btn-default">下一页</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    function confirmLogout() {
+        if(confirm('确定退出登录吗？')) {
+            window.location.href = '/logout';
+        }
+    }
+</script>
+</body>
+</html>

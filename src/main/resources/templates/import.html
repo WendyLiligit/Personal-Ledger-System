@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>记账 - 批量导入</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">💰</div>
+        <span>记账本</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a class="nav-item" th:href="@{/records}">
+            <span class="nav-icon">📋</span> 首页
+        </a>
+        <a class="nav-item active" th:href="@{/records/import}">
+            <span class="nav-icon">✏️</span> 记账
+        </a>
+        <a class="nav-item" th:href="@{/records/stats}">
+            <span class="nav-icon">📊</span> 统计
+        </a>
+        <a class="nav-item" th:href="@{/records/category}">
+            <span class="nav-icon">🏷️</span> 分类管理
+        </a>
+    </nav>
+    <div class="nav-bottom">
+        <a class="nav-item" th:href="@{/profile}">
+            <span class="nav-icon">👤</span> 个人中心
+        </a>
+        <a class="nav-item" th:href="@{/logout}">
+            <span class="nav-icon">🚪</span> 退出登录
+        </a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <div class="page active">
+        <div class="page-title">批量导入记账</div>
+
+        <div class="form-card">
+            <!-- 显示提示消息 -->
+            <div th:if="${message}" class="alert alert-success" th:text="${message}" style="padding:10px;background:#e6f7e6;border-radius:12px;margin-bottom:20px;"></div>
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}" style="padding:10px;background:#ffe6e6;border-radius:12px;margin-bottom:20px;"></div>
+
+            <form th:action="@{/records/import/upload}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>选择 CSV 文件（微信/支付宝导出）</label>
+                    <div class="upload-area" onclick="document.getElementById('csvInput').click()" style="cursor:pointer; text-align:center; border:2px dashed #ccc; border-radius:20px; padding:40px 20px;">
+                        <div class="upload-icon" style="font-size:40px;">📂</div>
+                        <p>点击或拖拽上传</p>
+                        <small>支持 .csv 文件，最大 10MB</small>
+                        <input type="file" id="csvInput" name="file" accept=".csv" style="display:none" onchange="this.form.submit()">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">上传并导入</button>
+                <a th:href="@{/records}" class="btn btn-default" style="display:block;text-align:center;margin-top:12px;">返回列表</a>
+            </form>
+
+            <div style="margin-top: 28px; background:#f9fafb; border-radius:16px; padding:16px;">
+                <h5 style="margin-bottom: 8px;">📄 CSV 格式要求</h5>
+                <p style="font-size:13px; color:#666; line-height:1.5">必须包含以下列：<strong>交易时间</strong>、<strong>交易类型</strong>（支出/收入）、<strong>金额</strong>、<strong>收支分类</strong>、<strong>备注</strong>。<br>示例：2026-04-15,支出,45.00,餐饮,午餐</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // 让上传区域支持拖拽（可选）
+    const area = document.querySelector('.upload-area');
+    if (area) {
+        area.addEventListener('dragover', (e) => e.preventDefault());
+        area.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.csv')) {
+                const input = document.getElementById('csvInput');
+                input.files = e.dataTransfer.files;
+                input.form.submit();
+            } else {
+                alert('请上传 .csv 文件');
+            }
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Compiled output
+target/
+out/
+
+# IDE
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/httpRequests/
+.idea/dataSources.local.xml
+.idea/shelf/
+.idea/azure/
+.idea/dictionaries
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
