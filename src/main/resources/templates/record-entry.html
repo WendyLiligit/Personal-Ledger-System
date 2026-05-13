@@ -63,8 +63,14 @@
                     </div>
                     <div class="form-group">
                         <label>金额 <span class="required">*</span></label>
-                        <div style="display:flex;align-items:center;gap:8px">
-                            <input type="number" step="0.01" name="amount" class="form-control" th:value="${record != null ? record.amount : ''}" required placeholder="请输入金额">
+                        <div style="display:flex;align-items:center;gap:8px; flex-wrap:wrap;">
+                            <div style="flex:1;">
+                                <input type="number" step="0.01" name="amount" class="form-control"
+                                       th:value="${record != null ? record.amount : ''}"
+                                       required placeholder="请输入金额（正数，最多两位小数）"
+                                       oninput="validateAmount(this)">
+                                <div style="color: #dc3545; font-size: 12px; margin-top: 4px;" id="amountError"></div>
+                            </div>
                             <span style="color:#666;white-space:nowrap">元</span>
                         </div>
                     </div>
@@ -127,6 +133,7 @@
             tabs[1].classList.add('active');
         }
     }
+
     function setType(type) {
         document.getElementById('typeInput').value = type;
         const expenseBtn = document.getElementById('expenseBtn');
@@ -139,11 +146,39 @@
             expenseBtn.classList.remove('active-expense');
         }
     }
+
     function confirmLogout() {
         if(confirm('确定退出登录吗？')) {
             window.location.href = '/logout';
         }
     }
+
+    // 金额实时校验函数
+    function validateAmount(input) {
+        let val = input.value.trim();
+        let errorSpan = document.getElementById('amountError');
+        if (val === "") {
+            errorSpan.innerText = "金额不能为空";
+            input.setCustomValidity("金额不能为空");
+            return false;
+        }
+        let num = parseFloat(val);
+        if (isNaN(num) || num <= 0) {
+            errorSpan.innerText = "请输入大于0的数字";
+            input.setCustomValidity("请输入大于0的数字");
+            return false;
+        }
+        // 检查最多两位小数
+        if (!/^\d+(\.\d{1,2})?$/.test(val)) {
+            errorSpan.innerText = "金额最多保留两位小数";
+            input.setCustomValidity("金额最多保留两位小数");
+            return false;
+        }
+        errorSpan.innerText = "";
+        input.setCustomValidity("");
+        return true;
+    }
+
     // 页面加载时根据已有记录的类型初始化按钮样式
     window.onload = function() {
         var typeInput = document.getElementById('typeInput');
