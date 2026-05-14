@@ -3,13 +3,7 @@ target/
 out/
 
 # IDE
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/httpRequests/
-.idea/dataSources.local.xml
-.idea/shelf/
-.idea/azure/
-.idea/dictionaries
+.idea/
 
 # Logs
 *.log

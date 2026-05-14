@@ -88,7 +88,7 @@
             <input type="number" name="maxAmount" class="filter-input amount" placeholder="最大值" th:value="${param.maxAmount}">
 
             <button type="submit" class="btn btn-primary">🔍 搜索</button>
-            <button type="reset" class="btn btn-default" onclick="window.location.href='/records'">↺ 重置</button>
+            <a href="/records" class="btn btn-default">↺ 重置</a>
         </form>
 
         <div class="table-card">
@@ -96,7 +96,6 @@
                 <h3>记录列表</h3>
                 <a th:href="@{/entry}" class="btn btn-success">＋ 新增记录</a>
             </div>
-            
             <!-- 【条件块】有记录时显示表格和分页 -->
             <!-- 条件判断：!#lists.isEmpty(records) 表示当 records 集合非空时执行 -->
             <div th:if="${!#lists.isEmpty(records)}">
@@ -125,7 +124,7 @@
                             <!-- 编辑：跳转到记账页面，携带记录 ID 参数 -->
                             <a th:href="@{/entry(id=${r.id})}" class="btn btn-sm btn-warning">编辑</a>
                             <!-- 删除：删除前确认，防止误操作 -->
-                            <a th:href="@{/records/delete/{id}(id=${r.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除？')">删除</a>
+                            <a th:href="@{/records/delete/{id}(id=${r.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这条记录吗？')">删除</a>
                         </td>
                     </tr>
                     </tbody>
