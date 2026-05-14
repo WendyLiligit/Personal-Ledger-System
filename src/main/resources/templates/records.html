@@ -111,7 +111,7 @@
                     <td th:class="${r.type == 'income' ? 'text-success' : 'text-danger'}" th:text="'¥' + ${#numbers.formatDecimal(r.amount, 1, 2)}"></td>
                     <td>
                         <a th:href="@{/entry(id=${r.id})}" class="btn btn-sm btn-warning">编辑</a>
-                        <a th:href="@{/records/delete/{id}(id=${r.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除？')">删除</a>
+                        <a th:href="@{/records/delete/{id}(id=${r.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这条记录吗？')">删除</a>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(records)}">
