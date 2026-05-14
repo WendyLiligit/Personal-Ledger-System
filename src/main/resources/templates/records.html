@@ -96,35 +96,71 @@
                 <h3>记录列表</h3>
                 <a th:href="@{/entry}" class="btn btn-success">＋ 新增记录</a>
             </div>
-            <table>
-                <thead>
-                <tr>
-                    <th>日期</th><th>分类</th><th>描述</th><th>类型</th><th>金额</th><th>操作</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="r : ${records}">
-                    <td th:text="${r.date}"></td>
-                    <td th:text="${r.category}"></td>
-                    <td th:text="${r.note}"></td>
-                    <td th:text="${r.type == 'income' ? '收入' : '支出'}"></td>
-                    <td th:class="${r.type == 'income' ? 'text-success' : 'text-danger'}" th:text="'¥' + ${#numbers.formatDecimal(r.amount, 1, 2)}"></td>
-                    <td>
-                        <a th:href="@{/entry(id=${r.id})}" class="btn btn-sm btn-warning">编辑</a>
-                        <a th:href="@{/records/delete/{id}(id=${r.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这条记录吗？')">删除</a>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(records)}">
-                    <td colspan="6" style="text-align:center">暂无数据</td>
-                </tr>
-                </tbody>
-            </table>
-            <div class="pagination">
-                <div class="pagination-info">第 <span th:text="${page.number + 1}"/> / <span th:text="${page.totalPages}"/> 页</div>
-                <div class="pagination-btns">
-                    <a th:href="@{/records(page=${page.number}, size=${page.size}, startDate=${param.startDate}, endDate=${param.endDate}, category=${param.category}, type=${param.type}, minAmount=${param.minAmount}, maxAmount=${param.maxAmount})}" th:unless="${page.first}" class="btn btn-default">上一页</a>
-                    <a th:href="@{/records(page=${page.number+2}, size=${page.size}, startDate=${param.startDate}, endDate=${param.endDate}, category=${param.category}, type=${param.type}, minAmount=${param.minAmount}, maxAmount=${param.maxAmount})}" th:unless="${page.last}" class="btn btn-default">下一页</a>
+            <!-- 【条件块】有记录时显示表格和分页 -->
+            <!-- 条件判断：!#lists.isEmpty(records) 表示当 records 集合非空时执行 -->
+            <div th:if="${!#lists.isEmpty(records)}">
+                <!-- 数据表格：展示所有收支记录 -->
+                <table>
+                    <thead>
+                    <tr>
+                        <th>日期</th><th>分类</th><th>描述</th><th>类型</th><th>金额</th><th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- 循环遍历 records 集合中的每条记录 -->
+                    <tr th:each="r : ${records}">
+                        <!-- 日期：直接展示记录的日期属性 -->
+                        <td th:text="${r.date}"></td>
+                        <!-- 分类：展示该笔记录的分类名称 -->
+                        <td th:text="${r.category}"></td>
+                        <!-- 描述：展示记录的备注信息 -->
+                        <td th:text="${r.note}"></td>
+                        <!-- 类型：根据 type 字段显示"收入"或"支出" -->
+                        <td th:text="${r.type == 'income' ? '收入' : '支出'}"></td>
+                        <!-- 金额：显示金额，收入绿色/支出红色，格式为两位小数 -->
+                        <td th:class="${r.type == 'income' ? 'text-success' : 'text-danger'}" th:text="'¥' + ${#numbers.formatDecimal(r.amount, 1, 2)}"></td>
+                        <!-- 操作列：编辑和删除按钮 -->
+                        <td>
+                            <!-- 编辑：跳转到记账页面，携带记录 ID 参数 -->
+                            <a th:href="@{/entry(id=${r.id})}" class="btn btn-sm btn-warning">编辑</a>
+                            <!-- 删除：删除前确认，防止误操作 -->
+                            <a th:href="@{/records/delete/{id}(id=${r.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这条记录吗？')">删除</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                
+                <!-- 分页导航：仅在有记录时显示 -->
+                <div class="pagination">
+                    <!-- 分页信息：显示当前页码和总页数 -->
+                    <!-- page.number 从 0 开始，+1 后显示用户友好的页码 -->
+                    <div class="pagination-info">第 <span th:text="${page.number + 1}"/> / <span th:text="${page.totalPages}"/> 页</div>
+                    <div class="pagination-btns">
+                        <!-- 上一页按钮：page.first 为 true 时隐藏（已在首页） -->
+                        <a th:href="@{/records(page=${page.number}, size=${page.size}, startDate=${param.startDate}, endDate=${param.endDate}, category=${param.category}, type=${param.type}, minAmount=${param.minAmount}, maxAmount=${param.maxAmount})}" th:unless="${page.first}" class="btn btn-default">上一页</a>
+                        <!-- 下一页按钮：page.last 为 true 时隐藏（已在末页），page.number+2 用于跳转到下一页 -->
+                        <a th:href="@{/records(page=${page.number+2}, size=${page.size}, startDate=${param.startDate}, endDate=${param.endDate}, category=${param.category}, type=${param.type}, minAmount=${param.minAmount}, maxAmount=${param.maxAmount})}" th:unless="${page.last}" class="btn btn-default">下一页</a>
+                    </div>
                 </div>
+            </div>
+            
+            <!-- 【条件块】无记录时显示空状态提示 -->
+            <!-- 条件判断：#lists.isEmpty(records) 表示当 records 集合为空时执行 -->
+            <!-- 用户体验优化：用友好的提示界面替代空表格，引导用户开始记账 -->
+            <div th:if="${#lists.isEmpty(records)}" style="text-align:center;padding:60px 20px;">
+                <!-- 空状态图标：使用邮箱空置符号视觉化表示"无数据" -->
+                <div style="font-size:48px;margin-bottom:16px">📭</div>
+                
+                <!-- 主标题：清晰地告知用户当前状态 -->
+                <div style="font-size:18px;color:#666;margin-bottom:24px">暂无收支记录</div>
+                
+                <!-- 副说明文本：提供一句话的描述和引导 -->
+                <p style="color:#999;margin-bottom:32px">开始记账，轻松管理您的收支</p>
+                
+                <!-- 行动按钮：引导用户进入记账页面开始添加记录 -->
+                <!-- 链接目标：/entry 页面（新增记录功能） -->
+                <!-- 使用 btn-success 样式保持视觉一致性 -->
+                <a th:href="@{/entry}" class="btn btn-success" style="padding:12px 32px;font-size:16px">💳 去记账</a>
             </div>
         </div>
     </div>
